@@ -2,6 +2,8 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 
+import constants as csts
+
 st.set_page_config(layout="wide")
 st.title("Analyse financière PEE Freitas 🏆")
 
@@ -26,8 +28,6 @@ if start_date and end_date:
     ]
     st.write(f"Filtré entre {start_date} et {end_date}")
 
-# Ajoutez le CSS pour styliser les en-têtes directement dans Streamlit
-
 gb = GridOptionsBuilder()
 
 # Exemple d'ajout de styles pour les cellules
@@ -36,9 +36,6 @@ gb.configure_default_column(
     filterable=True,
     sortable=True,
     editable=False,
-    # cellStyle={
-    #     "font-size": "20px"
-    # },  # Augmente la taille de la police pour les cellules
 )
 
 gb.configure_column(
@@ -66,7 +63,7 @@ gb.configure_column(
     field="DATE",
     header_name="Date",
     width=100,
-    valueFormatter="value != undefined ? new Date(value).toLocaleString('fr-FR', {dateStyle:'medium'}): ''",
+    valueFormatter=csts.DATE_FORMATTER,
     pivot=False,
 )
 
@@ -74,7 +71,7 @@ gb.configure_column(
     field="virtualYear",
     header_name="Année",
     width=100,
-    valueGetter="new Date(data.DATE).getFullYear()",
+    valueGetter=csts.YEAR_GETTER,
     pivot=True,
     hide=True,
 )
@@ -83,7 +80,7 @@ gb.configure_column(
     field="virtualMonth",
     header_name="Mois",
     width=100,
-    valueGetter="new Date(data.DATE).toLocaleDateString('en-US',options={year:'numeric', month:'2-digit'})",
+    valueGetter=csts.MONTH_GETTER,
     pivot=True,
     hide=True,
 )
@@ -94,7 +91,7 @@ gb.configure_column(
     width=100,
     type=["numericColumn"],
     aggFunc="sum",
-    valueFormatter="x.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})",
+    valueFormatter=csts.CURRENCY_FORMATTER,
 )
 
 gb.configure_grid_options(
