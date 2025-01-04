@@ -16,7 +16,7 @@ data = load_data()
 
 start_date = st.date_input("Sélectionnez une date de début", value=data["DATE"].min())
 end_date = st.date_input("Sélectionnez une date de fin", value=data["DATE"].max())
-shouldDisplayPivoted = st.checkbox("Démarrage de l'analyse")
+should_display_pivoted = st.checkbox("Démarrage de l'analyse")
 
 # Filtrer les données
 if start_date and end_date:
@@ -45,21 +45,21 @@ gb.configure_column(
     field="CATEGORIE",
     header_name="Catégorie",
     width=100,
-    rowGroup=shouldDisplayPivoted,
+    rowGroup=should_display_pivoted,
 )
 
 gb.configure_column(
     field="DEFINITION",
     header_name="Définition",
     width=250,
-    rowGroup=shouldDisplayPivoted,
+    rowGroup=should_display_pivoted,
 )
 
 gb.configure_column(
     field="LIBELLE",
     header_name="Libellé",
     width=100,
-    rowGroup=shouldDisplayPivoted,
+    rowGroup=should_display_pivoted,
 )
 
 gb.configure_column(
@@ -99,16 +99,9 @@ gb.configure_column(
 
 gb.configure_grid_options(
     tooltipShowDelay=0,
-    pivotMode=shouldDisplayPivoted,
+    pivotMode=should_display_pivoted,
     domLayout="normal",  # Ajuste la largeur du tableau à l'écran
 )
-
-# gb.configure_grid_options(
-#     autoGroupColumnDef=dict(
-#         pinned="left",
-#         cellRendererParams=dict(suppressCount=True),
-#     )
-# )
 
 go = gb.build()
 
