@@ -14,7 +14,7 @@ else:
     st.stop()
 
 # Étape 2 : Génération d'un tableau croisé dynamique
-st.header("Tableau Croisé Dynamique")
+st.header("1. Sélection des critères")
 if "pivot_table" not in st.session_state:
     st.session_state.pivot_table = None
 
@@ -44,7 +44,7 @@ if st.session_state.pivot_table is not None:
     # Convertir les colonnes en chaînes pour éviter les erreurs
     pivot_table.columns = pivot_table.columns.map(str)
 
-    st.subheader("Résultat du Tableau Croisé")
+    st.header("2. Analyse générale")
     gb = GridOptionsBuilder.from_dataframe(pivot_table)
     gb.configure_selection("single")  # Permet de sélectionner une seule cellule
     gb.configure_column(
@@ -71,8 +71,14 @@ if st.session_state.pivot_table is not None:
     # st.write("DEBUG - rows[0] : ", rows[0])
     # st.write("DEBUG - cols : ", cols)
 
-    if len(selected) > 0:  # Si au moins une cellule est sélectionnée
-        st.subheader("Détails Associés")
+    if selected is None:
+        st.header("3. Détail des charges")
+        st.write(
+            "Veuillez sélectionner une catégorie dans l'analyse générale pour accéder au détail des charges."
+        )
+
+    elif len(selected) > 0:  # Si au moins une cellule est sélectionnée
+        st.header("Détail des charges")
 
         row_var = rows[0]
         selected_value = selected.loc[:, row_var].values[0]
