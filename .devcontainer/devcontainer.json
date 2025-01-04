@@ -1,0 +1,89 @@
+{
+    "name": "PEE Freitas Docker Development Environment",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "pee-freitas-qliance",
+    "workspaceFolder": "/app/workspace",
+    "remoteUser": "qliance",
+    "initializeCommand": "echo COMPOSE_PROJECT_NAME=${localEnv:USER} > .env",
+    "postCreateCommand": "/bin/bash /app/workspace/.devcontainer/init.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.mypy-type-checker",
+                "njpwerner.autodocstring",
+                "ms-toolsai.jupyter",
+                "charliermarsh.ruff",
+                "redhat.vscode-yaml",
+                "tamasfe.even-better-toml",
+                "ms-vsliveshare.vsliveshare",
+                "davidanson.vscode-markdownlint",
+                "streetsidesoftware.code-spell-checker",
+                "eamodio.gitlens",
+                "foxundermoon.shell-format",
+                "mechatroner.rainbow-csv",
+                "gitlab.gitlab-workflow"
+            ],
+            "settings": {
+                "files.exclude": {
+                    "**/__pycache__": true,
+                    "**/.*_cache": true
+                },
+                "editor.formatOnSave": true,
+                "editor.formatOnPaste": true,
+                "files.autoSave": "onFocusChange", // can be changed if wanted
+                "python.defaultInterpreterPath": "/app/workspace/.venv/bin/python",
+                "python.poetryPath": "/app/.local/bin/poetry",
+                "python.editor.defaultFormatter": "charliermarsh.ruff",
+                "jupyter.notebookFileRoot": "${workspaceFolder}",
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": "always"
+                },
+                "editor.defaultFoldingRangeProvider": null,
+                "notebook.formatOnSave.enabled": false,
+                "notebook.codeActionsOnSave": {
+                    "source.organizeImports": true
+                },
+                "ruff.interpreter": [
+                    "/app/workspace/.venv/bin/python"
+                ],
+                "ruff.path": [
+                    "poetry",
+                    "run",
+                    "ruff"
+                ],
+                "ruff.organizeImports": true,
+                "mypy-type-checker.interpreter": [
+                    "/app/workspace/.venv/bin/python"
+                ],
+                "mypy-type-checker.path": [
+                    "poetry",
+                    "run",
+                    "mypy"
+                ],
+                "mypy-type-checker.args": [
+                    "--config-file=pyproject.toml"
+                ],
+                "mypy-type-checker.severity": {
+                    "import-untyped": "Information"
+                },
+                "mypy-type-checker.reportingScope": "workspace", // can be changed if wanted
+                "mypy-type-checker.showNotifications": "always",
+                "[toml]": {
+                    "editor.defaultFormatter": "tamasfe.even-better-toml"
+                },
+                "[yaml]": {
+                    "editor.defaultFormatter": "redhat.vscode-yaml"
+                },
+                "[markdown]": {
+                    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+                },
+                "[dockerfile]": {
+                    "editor.defaultFormatter": "foxundermoon.shell-format"
+                },
+                "cSpell.diagnosticLevel": "Hint" // to disable spelling errors in problems window
+            }
+        }
+    }
+}
+

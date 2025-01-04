@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  pee-freitas-qliance:
+    container_name: pee-freitas-$USER
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/app/workspace
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - pee-freitas-network
+
+networks:
+  pee-freitas-network:
+    name: pee-freitas-network
