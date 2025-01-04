@@ -2,6 +2,8 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 
+st.set_page_config(layout="wide")
+
 # Étape 1 : Charger un fichier Excel
 st.title("PEE Freitas 🏆")
 uploaded_file = st.file_uploader("Charger un fichier Excel", type="xlsx")
@@ -46,6 +48,12 @@ if st.session_state.pivot_table is not None:
 
     st.header("2. Analyse générale")
     gb = GridOptionsBuilder.from_dataframe(pivot_table)
+    gb.configure_default_column(
+        resizable=True,
+        filterable=True,
+        sortable=True,
+        editable=False,
+    )
     gb.configure_selection("single")  # Permet de sélectionner une seule cellule
     gb.configure_column(
         field="DEBIT",
