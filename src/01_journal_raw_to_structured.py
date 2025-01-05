@@ -13,7 +13,9 @@ journal.columns = clean_col_names(journal)
 for col in ["DEBIT", "CREDIT"]:
     journal[col] = journal[col].astype(float)
 
-journal["DATE_STR"] = journal["DATE"]
+journal["DATE_STR"] = pd.to_datetime(journal["DATE"], format="%d/%m/%Y").dt.strftime(
+    "%d-%m-%Y"
+)
 
 # Convert the columns "DATE" and "ECHEANCE" to datetime type with the specified format
 for col in ["DATE", "ECHEANCE"]:

@@ -29,7 +29,13 @@ end_date = st.sidebar.date_input(
     value=data["DATE"].max(),
 )
 
-should_display_pivoted = st.sidebar.button("Démarrage de l'analyse")
+# should_display_pivoted = st.sidebar.button("Démarrage de l'analyse")
+
+mode_analyse = st.sidebar.radio(
+    "Choisir le mode d'analyse 👉",
+    key="visibility",
+    options=["Standard", "Groupé"],
+)
 
 if start_date and end_date:
     data = data[
@@ -64,7 +70,7 @@ total_cost = st.metric(
     value=currency_formating(data["DEBIT"].sum()),
 )
 
-if not should_display_pivoted:
+if mode_analyse == "Standard":
     gb = GridOptionsBuilder()
 
     gb.configure_default_column(
@@ -116,10 +122,11 @@ if not should_display_pivoted:
         gridOptions=go,
         height=600,
         fit_columns_on_grid_load=True,
+        enable_enterprise_modules=False,
         theme="streamlit",
     )
 
-if should_display_pivoted:
+if mode_analyse == "Groupé":
     # Configuration de la grille AgGrid
     gb = GridOptionsBuilder()
 
