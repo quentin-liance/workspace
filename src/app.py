@@ -2,107 +2,205 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 
+import constants as csts
+import paths
+from utils import currency_formating
+
 st.set_page_config(layout="wide")
+st.title(csts.TITLE)
+st.markdown(csts.SUBTITLE)
 
-# Étape 1 : Charger un fichier Excel
-st.title("PEE Freitas 🏆")
-uploaded_file = st.file_uploader("Charger un fichier Excel", type="xlsx")
-if uploaded_file:
-    if "df" not in st.session_state:
-        st.session_state.df = pd.read_excel(uploaded_file)
-    df = st.session_state.df
-    st.success("Fichier Excel chargé avec succès.")
-else:
-    st.stop()
 
-# Étape 2 : Génération d'un tableau croisé dynamique
-st.header("1. Sélection des critères")
-if "pivot_table" not in st.session_state:
-    st.session_state.pivot_table = None
+@st.cache_data()
+def load_data():
+    data = pd.read_parquet(paths.CUBE_FILE_PATH)
+    return data
 
-with st.form("pivot_form"):
-    rows = st.multiselect(
-        "Choisir les lignes",
-        options=["CATEGORIE"],
-        key="rows",
-        default=["CATEGORIE"],
-    )
-    cols = st.multiselect("Choisir les colonnes", options=["AAAAMM"], key="cols")
 
-    submit = st.form_submit_button("Générer")
+data = load_data()
 
-if submit and rows:
-    st.session_state.pivot_table = pd.pivot_table(
-        df,
-        values="DEBIT",
-        index=rows,
-        columns=cols if cols else None,
-        aggfunc="sum",
-    ).reset_index()
+# Filtrage par date
+start_date = st.sidebar.date_input(
+    "Sélectionnez une date de début",
+    value=data["DATE"].min(),
+)
+end_date = st.sidebar.date_input(
+    "Sélectionnez une date de fin",
+    value=data["DATE"].max(),
+)
 
-if st.session_state.pivot_table is not None:
-    pivot_table = st.session_state.pivot_table
+should_display_pivoted = st.sidebar.button("Démarrage de l'analyse")
 
-    # Convertir les colonnes en chaînes pour éviter les erreurs
-    pivot_table.columns = pivot_table.columns.map(str)
+if start_date and end_date:
+    data = data[
+        (data["DATE"] >= pd.to_datetime(start_date))
+        & (data["DATE"] <= pd.to_datetime(end_date))
+    ]
+    st.write(f"Filtré entre {start_date} et {end_date}")
 
-    st.header("2. Analyse générale")
-    gb = GridOptionsBuilder.from_dataframe(pivot_table)
+# Filtrage par catégorie
+categories = st.sidebar.multiselect(
+    "Filtrer par catégorie",
+    options=data["LIBELLE_CATEGORIE"].unique(),
+    default=data["LIBELLE_CATEGORIE"].unique(),
+)
+
+if categories:
+    data = data[data["LIBELLE_CATEGORIE"].isin(categories)]
+
+# Filtrage par sous-catégorie
+sub_categories = st.sidebar.multiselect(
+    "Filtrer par sous-catégorie",
+    options=data["LIBELLE_SOUS_CATEGORIE"].unique(),
+    default=data["LIBELLE_SOUS_CATEGORIE"].unique(),
+)
+
+if sub_categories:
+    data = data[data["LIBELLE_SOUS_CATEGORIE"].isin(sub_categories)]
+
+# Indicateurs
+total_cost = st.metric(
+    label="Charges Total (€)",
+    value=currency_formating(data["DEBIT"].sum()),
+)
+
+if not should_display_pivoted:
+    gb = GridOptionsBuilder()
+
     gb.configure_default_column(
         resizable=True,
         filterable=True,
         sortable=True,
         editable=False,
     )
-    gb.configure_selection("single")  # Permet de sélectionner une seule cellule
+
+    # Configuration des colonnes
+    gb.configure_column(
+        field="LIBELLE_CATEGORIE",
+        header_name="Catégorie",
+        width=100,
+    )
+
+    gb.configure_column(
+        field="LIBELLE_SOUS_CATEGORIE",
+        header_name="Sous Catégorie",
+        width=250,
+    )
+
+    gb.configure_column(
+        field="LIBELLE",
+        header_name="Libellé",
+        width=100,
+    )
+
+    gb.configure_column(
+        field="DATE_STR",
+        header_name="Date",
+        width=100,
+        valueFormatter=csts.DATE_FORMATTER,
+    )
+
     gb.configure_column(
         field="DEBIT",
+        header_name="Charges (€)",
+        width=100,
         type=["numericColumn"],
-        valueFormatter="x.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})",
+        valueFormatter=csts.CURRENCY_FORMATTER,
     )
-    grid_options = gb.build()
 
-    grid_response = AgGrid(
-        pivot_table,
-        gridOptions=grid_options,
-        enable_enterprise_modules=False,
-        theme="streamlit",  # Options : streamlit, light, dark, etc.
-        height=400,
-        update_mode="MODEL_CHANGED",
+    go = gb.build()
+
+    # Affichage du tableau
+    AgGrid(
+        data,
+        gridOptions=go,
+        height=600,
         fit_columns_on_grid_load=True,
+        theme="streamlit",
     )
 
-    # Étape 3 : Détails associés
-    selected = grid_response.get("selected_rows", [])  # .reset_index(drop=True)
+if should_display_pivoted:
+    # Configuration de la grille AgGrid
+    gb = GridOptionsBuilder()
 
-    # st.write("DEBUG - rows : ", rows)
-    # st.write("DEBUG - rows[0] : ", rows[0])
-    # st.write("DEBUG - cols : ", cols)
+    gb.configure_default_column(
+        resizable=True,
+        filterable=True,
+        sortable=True,
+        editable=False,
+    )
 
-    if selected is None:
-        st.header("3. Détail des charges")
-        st.write(
-            "Veuillez sélectionner une catégorie dans l'analyse générale pour accéder au détail des charges."
-        )
+    # Configuration des colonnes
+    gb.configure_column(
+        field="LIBELLE_CATEGORIE",
+        header_name="Catégorie",
+        width=100,
+        rowGroup=True,
+    )
 
-    elif len(selected) > 0:  # Si au moins une cellule est sélectionnée
-        st.header("Détail des charges")
+    gb.configure_column(
+        field="LIBELLE_SOUS_CATEGORIE",
+        header_name="Sous Catégorie",
+        width=250,
+        rowGroup=True,
+    )
 
-        row_var = rows[0]
-        selected_value = selected.loc[:, row_var].values[0]
-        # st.write("DEBUG - test : ", test)
-        cols_of_interest = ["CATEGORIE", "DEFINITION", "DATE", "LIBELLE", "DEBIT"]
+    gb.configure_column(
+        field="LIBELLE",
+        header_name="Libellé",
+        width=100,
+        rowGroup=True,
+    )
 
-        if selected_value:
-            detail_df = df.copy()
-            mask = detail_df[row_var] == selected_value
-            filter_detail_df = detail_df.loc[mask, cols_of_interest].reset_index(
-                drop=True
-            )
-            st.dataframe(
-                filter_detail_df.style.format({"DEBIT": "{:,.2f} €"}),
-                use_container_width=True,
-                height=400,
-            )
-        else:
-            st.write("Aucune cellule sélectionnée.")
+    gb.configure_column(
+        field="DATE",
+        header_name="Date",
+        width=100,
+        valueFormatter=csts.DATE_FORMATTER,
+        pivot=False,
+    )
+
+    gb.configure_column(
+        field="virtualYear",
+        header_name="Année",
+        width=100,
+        valueGetter=csts.YEAR_GETTER,
+        pivot=True,
+        hide=True,
+    )
+
+    gb.configure_column(
+        field="virtualMonth",
+        header_name="Mois",
+        width=100,
+        valueGetter=csts.MONTH_GETTER,
+        pivot=True,
+        hide=True,
+    )
+
+    gb.configure_column(
+        field="DEBIT",
+        header_name="Charges (€)",
+        width=100,
+        type=["numericColumn"],
+        aggFunc="sum",
+        valueFormatter=csts.CURRENCY_FORMATTER,
+    )
+
+    gb.configure_grid_options(
+        tooltipShowDelay=0,
+        # pivotMode=should_display_pivoted,
+        pivotMode=True,
+        domLayout="normal",
+    )
+
+    go = gb.build()
+
+    # Affichage du tableau
+    AgGrid(
+        data,
+        gridOptions=go,
+        height=600,
+        fit_columns_on_grid_load=True,
+        theme="streamlit",
+    )
