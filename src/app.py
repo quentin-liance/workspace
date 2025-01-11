@@ -4,210 +4,216 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 import constants as csts
 import paths
-from utils import currency_formating
+import utils
 
 st.set_page_config(layout="wide")
 st.title(csts.TITLE)
 st.markdown(csts.SUBTITLE)
 
+uploaded_journal_file_path = st.file_uploader("Charger un journal", type=["xlsx"])
 
-@st.cache_data()
-def load_data():
-    data = pd.read_parquet(paths.CUBE_FILE_PATH)
-    return data
+if uploaded_journal_file_path is not None:
+    uploaded_journal = pd.read_excel(uploaded_journal_file_path)
+    journal = utils.process_journal_data(uploaded_journal)
+    compte = utils.process_plan_comptable(paths.PLAN_COMPTABLE_RAW_FILE_PATH)
+    data = utils.process_charges_cube(journal, compte)
+    print(data.head())
 
-
-data = load_data()
-
-# Filtrage par date
-start_date = st.sidebar.date_input(
-    "Sélectionnez une date de début",
-    value=data["DATE"].min(),
-)
-end_date = st.sidebar.date_input(
-    "Sélectionnez une date de fin",
-    value=data["DATE"].max(),
-)
-
-# should_display_pivoted = st.sidebar.button("Démarrage de l'analyse")
-
-mode_analyse = st.sidebar.radio(
-    "Choisir le mode d'analyse 👉",
-    key="visibility",
-    options=["Standard", "Groupé"],
-)
-
-if start_date and end_date:
-    data = data[
-        (data["DATE"] >= pd.to_datetime(start_date))
-        & (data["DATE"] <= pd.to_datetime(end_date))
-    ]
-    st.write(f"Filtré entre {start_date} et {end_date}")
-
-# Filtrage par catégorie
-categories = st.sidebar.multiselect(
-    "Filtrer par catégorie",
-    options=data["LIBELLE_CATEGORIE"].unique(),
-    default=data["LIBELLE_CATEGORIE"].unique(),
-)
-
-if categories:
-    data = data[data["LIBELLE_CATEGORIE"].isin(categories)]
-
-# Filtrage par sous-catégorie
-sub_categories = st.sidebar.multiselect(
-    "Filtrer par sous-catégorie",
-    options=data["LIBELLE_SOUS_CATEGORIE"].unique(),
-    default=data["LIBELLE_SOUS_CATEGORIE"].unique(),
-)
-
-if sub_categories:
-    data = data[data["LIBELLE_SOUS_CATEGORIE"].isin(sub_categories)]
-
-# Indicateurs
-total_cost = st.metric(
-    label="Charges Total (€)",
-    value=currency_formating(data["DEBIT"].sum()),
-)
-
-if mode_analyse == "Standard":
-    gb = GridOptionsBuilder()
-
-    gb.configure_default_column(
-        resizable=True,
-        filterable=True,
-        sortable=True,
-        editable=False,
+    # Filtrage par date
+    start_date = st.sidebar.date_input(
+        "Sélectionnez une date de début",
+        value=data["DATE"].min(),
+    )
+    end_date = st.sidebar.date_input(
+        "Sélectionnez une date de fin",
+        value=data["DATE"].max(),
     )
 
-    # Configuration des colonnes
-    gb.configure_column(
-        field="LIBELLE_CATEGORIE",
-        header_name="Catégorie",
-        width=100,
+    mode_analyse = st.sidebar.radio(
+        "Choisir le mode d'analyse 👉",
+        key="visibility",
+        options=["Standard", "Groupé"],
     )
 
-    gb.configure_column(
-        field="LIBELLE_SOUS_CATEGORIE",
-        header_name="Sous Catégorie",
-        width=250,
+    if start_date and end_date:
+        data = data[
+            (data["DATE"] >= pd.to_datetime(start_date))
+            & (data["DATE"] <= pd.to_datetime(end_date))
+        ]
+        st.write(f"Filtré entre {start_date} et {end_date}")
+
+    # Filtrage par catégorie
+    categories = st.sidebar.multiselect(
+        "Filtrer par catégorie",
+        options=data["LIBELLE_CATEGORIE"].unique(),
+        default=data["LIBELLE_CATEGORIE"].unique(),
     )
 
-    gb.configure_column(
-        field="LIBELLE",
-        header_name="Libellé",
-        width=100,
+    if categories:
+        data = data[data["LIBELLE_CATEGORIE"].isin(categories)]
+
+    # Filtrage par sous-catégorie
+    sub_categories = st.sidebar.multiselect(
+        "Filtrer par sous-catégorie",
+        options=data["LIBELLE_SOUS_CATEGORIE"].unique(),
+        default=data["LIBELLE_SOUS_CATEGORIE"].unique(),
     )
 
-    gb.configure_column(
-        field="DATE_STR",
-        header_name="Date",
-        width=100,
-        valueFormatter=csts.DATE_FORMATTER,
+    if sub_categories:
+        data = data[data["LIBELLE_SOUS_CATEGORIE"].isin(sub_categories)]
+
+    # Indicateurs
+    total_cost = st.metric(
+        label="Charges Total (€)",
+        value=utils.currency_formating(data["DEBIT"].sum()),
     )
 
-    gb.configure_column(
-        field="DEBIT",
-        header_name="Charges (€)",
-        width=100,
-        type=["numericColumn"],
-        valueFormatter=csts.CURRENCY_FORMATTER,
-    )
+    if mode_analyse == "Standard":
+        gb = GridOptionsBuilder()
 
-    go = gb.build()
+        gb.configure_default_column(
+            resizable=True,
+            filterable=True,
+            sortable=True,
+            editable=False,
+        )
 
-    # Affichage du tableau
-    AgGrid(
-        data,
-        gridOptions=go,
-        height=600,
-        fit_columns_on_grid_load=True,
-        enable_enterprise_modules=False,
-        theme="streamlit",
-    )
+        # Configuration des colonnes
+        gb.configure_column(
+            field="LIBELLE_CATEGORIE",
+            header_name="Catégorie",
+            width=100,
+        )
 
-if mode_analyse == "Groupé":
-    # Configuration de la grille AgGrid
-    gb = GridOptionsBuilder()
+        gb.configure_column(
+            field="LIBELLE_SOUS_CATEGORIE",
+            header_name="Sous Catégorie",
+            width=250,
+        )
 
-    gb.configure_default_column(
-        resizable=True,
-        filterable=True,
-        sortable=True,
-        editable=False,
-    )
+        gb.configure_column(
+            field="LIBELLE",
+            header_name="Libellé",
+            width=100,
+        )
 
-    # Configuration des colonnes
-    gb.configure_column(
-        field="LIBELLE_CATEGORIE",
-        header_name="Catégorie",
-        width=100,
-        rowGroup=True,
-    )
+        gb.configure_column(
+            field="DATE",
+            header_name="Date",
+            width=100,
+            type=["customDateTime"],
+            valueFormatter="""function(params) {
+                if (params.value) {
+                    const date = new Date(Date.parse(params.value));
+                    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                }
+                return null;
+                }""",
+            # valueFormatter=csts.DATE_FORMATTER,
+        )
 
-    gb.configure_column(
-        field="LIBELLE_SOUS_CATEGORIE",
-        header_name="Sous Catégorie",
-        width=250,
-        rowGroup=True,
-    )
+        gb.configure_column(
+            field="DEBIT",
+            header_name="Charges (€)",
+            width=100,
+            type=["numericColumn"],
+            valueFormatter=csts.CURRENCY_FORMATTER,
+        )
 
-    gb.configure_column(
-        field="LIBELLE",
-        header_name="Libellé",
-        width=100,
-        rowGroup=True,
-    )
+        go = gb.build()
 
-    gb.configure_column(
-        field="DATE",
-        header_name="Date",
-        width=100,
-        valueFormatter=csts.DATE_FORMATTER,
-        pivot=False,
-    )
+        # Affichage du tableau
+        AgGrid(
+            data,
+            gridOptions=go,
+            height=600,
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=False,
+            theme="streamlit",
+        )
 
-    gb.configure_column(
-        field="virtualYear",
-        header_name="Année",
-        width=100,
-        valueGetter=csts.YEAR_GETTER,
-        pivot=True,
-        hide=True,
-    )
+    if mode_analyse == "Groupé":
+        # Configuration de la grille AgGrid
+        gb = GridOptionsBuilder()
 
-    gb.configure_column(
-        field="virtualMonth",
-        header_name="Mois",
-        width=100,
-        valueGetter=csts.MONTH_GETTER,
-        pivot=True,
-        hide=True,
-    )
+        gb.configure_default_column(
+            resizable=True,
+            filterable=True,
+            sortable=True,
+            editable=False,
+        )
 
-    gb.configure_column(
-        field="DEBIT",
-        header_name="Charges (€)",
-        width=100,
-        type=["numericColumn"],
-        aggFunc="sum",
-        valueFormatter=csts.CURRENCY_FORMATTER,
-    )
+        # Configuration des colonnes
+        gb.configure_column(
+            field="LIBELLE_CATEGORIE",
+            header_name="Catégorie",
+            width=100,
+            rowGroup=True,
+        )
 
-    gb.configure_grid_options(
-        tooltipShowDelay=0,
-        # pivotMode=should_display_pivoted,
-        pivotMode=True,
-        domLayout="normal",
-    )
+        gb.configure_column(
+            field="LIBELLE_SOUS_CATEGORIE",
+            header_name="Sous Catégorie",
+            width=250,
+            rowGroup=True,
+        )
 
-    go = gb.build()
+        gb.configure_column(
+            field="LIBELLE",
+            header_name="Libellé",
+            width=100,
+            rowGroup=True,
+        )
 
-    # Affichage du tableau
-    AgGrid(
-        data,
-        gridOptions=go,
-        height=600,
-        fit_columns_on_grid_load=True,
-        theme="streamlit",
-    )
+        gb.configure_column(
+            field="DATE",
+            header_name="Date",
+            width=100,
+            valueFormatter=csts.DATE_FORMATTER,
+            pivot=False,
+        )
+
+        gb.configure_column(
+            field="virtualYear",
+            header_name="Année",
+            width=100,
+            valueGetter=csts.YEAR_GETTER,
+            pivot=True,
+            hide=True,
+        )
+
+        gb.configure_column(
+            field="virtualMonth",
+            header_name="Mois",
+            width=100,
+            valueGetter=csts.MONTH_GETTER,
+            pivot=True,
+            hide=True,
+        )
+
+        gb.configure_column(
+            field="DEBIT",
+            header_name="Charges (€)",
+            width=100,
+            type=["numericColumn"],
+            aggFunc="sum",
+            valueFormatter=csts.CURRENCY_FORMATTER,
+        )
+
+        gb.configure_grid_options(
+            tooltipShowDelay=0,
+            # pivotMode=should_display_pivoted,
+            pivotMode=True,
+            domLayout="normal",
+        )
+
+        go = gb.build()
+
+        # Affichage du tableau
+        AgGrid(
+            data,
+            gridOptions=go,
+            height=600,
+            fit_columns_on_grid_load=True,
+            theme="streamlit",
+        )

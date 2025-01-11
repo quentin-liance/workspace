@@ -1,13 +1,13 @@
-# DATE_FORMATTER = "value != undefined ? new Date(value).toLocaleString('fr=FR', {dateStyle:'medium'}): ''"
+DATE_FORMATTER = "value != undefined ? new Date(value).toLocaleString('fr=FR', {dateStyle:'medium'}): ''"
 
 
-DATE_FORMATTER = """
-    function(params) {
-        return params.value != undefined 
-            ? new Date(params.value).toLocaleString('us-US', {dateStyle: 'medium'}) 
-            : '';
-    }
-"""
+# DATE_FORMATTER = """
+#     function(params) {
+#         return params.value != undefined
+#             ? new Date(params.value).toLocaleString('us-US', {dateStyle: 'medium'})
+#             : '';
+#     }
+# """
 
 
 CURRENCY_FORMATTER = "x.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})"
