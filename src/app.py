@@ -13,11 +13,14 @@ st.markdown(csts.SUBTITLE)
 uploaded_journal_file_path = st.file_uploader("Charger un journal", type=["xlsx"])
 
 if uploaded_journal_file_path is not None:
-    uploaded_journal = pd.read_excel(uploaded_journal_file_path)
+    uploaded_journal = pd.read_excel(
+        uploaded_journal_file_path,
+        parse_dates=["Date"],
+        date_format="%d/%m/%Y",
+    )
     journal = utils.process_journal_data(uploaded_journal)
     compte = utils.process_plan_comptable(paths.PLAN_COMPTABLE_RAW_FILE_PATH)
     data = utils.process_charges_cube(journal, compte)
-    print(data.head())
 
     # Filtrage par date
     start_date = st.sidebar.date_input(
@@ -101,15 +104,7 @@ if uploaded_journal_file_path is not None:
             field="DATE",
             header_name="Date",
             width=100,
-            type=["customDateTime"],
-            valueFormatter="""function(params) {
-                if (params.value) {
-                    const date = new Date(Date.parse(params.value));
-                    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                }
-                return null;
-                }""",
-            # valueFormatter=csts.DATE_FORMATTER,
+            valueFormatter=csts.DATE_FORMATTER,
         )
 
         gb.configure_column(

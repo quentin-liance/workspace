@@ -42,15 +42,6 @@ def process_journal_data(journal: pd.DataFrame) -> pd.DataFrame:
         journal["DATE"], format="%d/%m/%Y"
     ).dt.strftime("%Y-%m-%d")
 
-    # Convert "DATE" and "ECHEANCE" columns to datetime format
-    for col in ["DATE", "ECHEANCE"]:
-        journal[col] = pd.to_datetime(journal[col], format="%d/%m/%Y")
-
-    # Create a new column "AAAAMM" by formatting the "DATE" column
-    journal["AAAAMM"] = journal["DATE"].dt.strftime("%Y%m")
-
-    # Save the processed journal data to a Parquet file
-    # journal.to_parquet(output_path, index=False)
     return journal
 
 
