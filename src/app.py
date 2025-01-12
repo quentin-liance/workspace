@@ -12,13 +12,17 @@ def main() -> None:
     setup_page()
 
     uploaded_journal_file_path = st.file_uploader("Charger un journal", type=["xlsx"])
+    uploaded_compte_file_path = st.file_uploader("Charger les comptes", type=["xlsx"])
 
-    if uploaded_journal_file_path is not None:
-        data = process_uploaded_file(uploaded_journal_file_path)
+    if uploaded_journal_file_path and uploaded_compte_file_path is not None:
+        data = process_uploaded_file(
+            uploaded_journal_file_path,
+            uploaded_compte_file_path,
+        )
 
         start_date, end_date = configure_date_filter(data)
-        categories, sub_categories = configure_category_filters(data)
         mode_analyse = configure_analysis_mode()
+        categories, sub_categories = configure_category_filters(data)
 
         data = apply_filters(data, start_date, end_date, categories, sub_categories)
 
@@ -33,7 +37,9 @@ def setup_page() -> None:
     st.markdown(csts.SUBTITLE)
 
 
-def process_uploaded_file(uploaded_file_path: str) -> pd.DataFrame:
+def process_uploaded_file(
+    uploaded_file_path: str, uploaded_compte_file_path: str
+) -> pd.DataFrame:
     """Process the uploaded journal file and return a processed DataFrame.
 
     Args:
@@ -47,8 +53,11 @@ def process_uploaded_file(uploaded_file_path: str) -> pd.DataFrame:
         parse_dates=["Date"],
         date_format="%d/%m/%Y",
     )
+
+    uploaded_compte = pd.read_excel(uploaded_compte_file_path, dtype=str)
+
     journal = utils.process_journal_data(uploaded_journal)
-    compte = utils.process_plan_comptable(paths.PLAN_COMPTABLE_RAW_FILE_PATH)
+    compte = utils.process_plan_comptable(uploaded_compte)
     return utils.process_charges_cube(journal, compte)
 
 

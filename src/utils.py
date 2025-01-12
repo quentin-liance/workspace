@@ -46,7 +46,7 @@ def process_journal_data(journal: pd.DataFrame) -> pd.DataFrame:
 
 
 @st.cache_data()
-def process_plan_comptable(input_path: str) -> pd.DataFrame:
+def process_plan_comptable(plan_comptable: pd.DataFrame) -> pd.DataFrame:
     """
     Processes the plan comptable data to generate a structured file with categories and subcategories.
 
@@ -54,8 +54,6 @@ def process_plan_comptable(input_path: str) -> pd.DataFrame:
         input_path (str): Path to the raw plan comptable Excel file.
         output_path (str): Path to save the processed Parquet file.
     """
-    # Read the raw plan comptable data
-    plan_comptable = pd.read_excel(input_path, dtype=str)
 
     # Rename the columns
     plan_comptable.columns = ["CODE", "LIBELLE"]
