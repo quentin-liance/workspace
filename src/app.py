@@ -1,3 +1,6 @@
+# fmt: off
+from turtle import mode
+
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
@@ -24,30 +27,28 @@ if uploaded_journal_file_path is not None:
 
     # Filtrage par date
     start_date = st.sidebar.date_input(
-        "Sélectionnez une date de début",
+        label="Sélectionnez une date de début",
         value=data["DATE"].min(),
-    )
+        )
+    
     end_date = st.sidebar.date_input(
-        "Sélectionnez une date de fin",
+        label="Sélectionnez une date de fin",
         value=data["DATE"].max(),
-    )
-
+        )
+    
     mode_analyse = st.sidebar.radio(
-        "Choisir le mode d'analyse 👉",
+        label="Choisir le mode d'analyse 👉",
         key="visibility",
         options=["Standard", "Groupé"],
-    )
+        )
 
     if start_date and end_date:
-        data = data[
-            (data["DATE"] >= pd.to_datetime(start_date))
-            & (data["DATE"] <= pd.to_datetime(end_date))
-        ]
+        data = data[data["DATE"].between(pd.to_datetime(start_date), pd.to_datetime(end_date))]
         st.write(f"Filtré entre {start_date} et {end_date}")
 
     # Filtrage par catégorie
     categories = st.sidebar.multiselect(
-        "Filtrer par catégorie",
+        label="Filtrer par catégorie",
         options=data["LIBELLE_CATEGORIE"].unique(),
         default=data["LIBELLE_CATEGORIE"].unique(),
     )
@@ -57,7 +58,7 @@ if uploaded_journal_file_path is not None:
 
     # Filtrage par sous-catégorie
     sub_categories = st.sidebar.multiselect(
-        "Filtrer par sous-catégorie",
+        label="Filtrer par sous-catégorie",
         options=data["LIBELLE_SOUS_CATEGORIE"].unique(),
         default=data["LIBELLE_SOUS_CATEGORIE"].unique(),
     )
@@ -71,33 +72,37 @@ if uploaded_journal_file_path is not None:
         value=utils.currency_formating(data["DEBIT"].sum()),
     )
 
+    gb = GridOptionsBuilder()
+
+    gb.configure_default_column(
+        resizable=True,
+        filterable=True,
+        sortable=True,
+        editable=False,
+    )
+
     if mode_analyse == "Standard":
-        gb = GridOptionsBuilder()
-
-        gb.configure_default_column(
-            resizable=True,
-            filterable=True,
-            sortable=True,
-            editable=False,
-        )
-
+        
         # Configuration des colonnes
         gb.configure_column(
             field="LIBELLE_CATEGORIE",
             header_name="Catégorie",
             width=100,
+            rowGroup=True if mode_analyse == "Groupé" else False,
         )
 
         gb.configure_column(
             field="LIBELLE_SOUS_CATEGORIE",
             header_name="Sous Catégorie",
             width=250,
+            rowGroup=True if mode_analyse == "Groupé" else False,
         )
 
         gb.configure_column(
             field="LIBELLE",
             header_name="Libellé",
             width=100,
+            rowGroup=True if mode_analyse == "Groupé" else False,
         )
 
         gb.configure_column(
@@ -128,15 +133,6 @@ if uploaded_journal_file_path is not None:
         )
 
     if mode_analyse == "Groupé":
-        # Configuration de la grille AgGrid
-        gb = GridOptionsBuilder()
-
-        gb.configure_default_column(
-            resizable=True,
-            filterable=True,
-            sortable=True,
-            editable=False,
-        )
 
         # Configuration des colonnes
         gb.configure_column(
