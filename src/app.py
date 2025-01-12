@@ -79,29 +79,37 @@ if uploaded_journal_file_path is not None:
         editable=False,
     )
 
-    if mode_analyse == "Standard":
-        
         # Configuration des colonnes
-        gb.configure_column(
-            field="LIBELLE_CATEGORIE",
-            header_name="Catégorie",
+    gb.configure_column(
+        field="LIBELLE_CATEGORIE",
+        header_name="Catégorie",
+        width=100,
+        rowGroup=True if mode_analyse == "Groupé" else False,
+    )
+
+    gb.configure_column(
+        field="LIBELLE_SOUS_CATEGORIE",
+        header_name="Sous Catégorie",
+        width=250,
+        rowGroup=True if mode_analyse == "Groupé" else False,
+    )
+
+    gb.configure_column(
+        field="LIBELLE",
+        header_name="Libellé",
+        width=100,
+        rowGroup=True if mode_analyse == "Groupé" else False,
+    )
+
+    gb.configure_column(
+            field="DEBIT",
+            header_name="Charges (€)",
             width=100,
-            rowGroup=True if mode_analyse == "Groupé" else False,
+            type=["numericColumn"],
+            valueFormatter=csts.CURRENCY_FORMATTER,
         )
 
-        gb.configure_column(
-            field="LIBELLE_SOUS_CATEGORIE",
-            header_name="Sous Catégorie",
-            width=250,
-            rowGroup=True if mode_analyse == "Groupé" else False,
-        )
-
-        gb.configure_column(
-            field="LIBELLE",
-            header_name="Libellé",
-            width=100,
-            rowGroup=True if mode_analyse == "Groupé" else False,
-        )
+    if mode_analyse == "Standard":
 
         gb.configure_column(
             field="DATE",
@@ -110,49 +118,7 @@ if uploaded_journal_file_path is not None:
             valueFormatter=csts.DATE_FORMATTER,
         )
 
-        gb.configure_column(
-            field="DEBIT",
-            header_name="Charges (€)",
-            width=100,
-            type=["numericColumn"],
-            valueFormatter=csts.CURRENCY_FORMATTER,
-        )
-
-        go = gb.build()
-
-        # Affichage du tableau
-        AgGrid(
-            data,
-            gridOptions=go,
-            height=600,
-            fit_columns_on_grid_load=True,
-            enable_enterprise_modules=False,
-            theme="streamlit",
-        )
-
     if mode_analyse == "Groupé":
-
-        # Configuration des colonnes
-        gb.configure_column(
-            field="LIBELLE_CATEGORIE",
-            header_name="Catégorie",
-            width=100,
-            rowGroup=True,
-        )
-
-        gb.configure_column(
-            field="LIBELLE_SOUS_CATEGORIE",
-            header_name="Sous Catégorie",
-            width=250,
-            rowGroup=True,
-        )
-
-        gb.configure_column(
-            field="LIBELLE",
-            header_name="Libellé",
-            width=100,
-            rowGroup=True,
-        )
 
         gb.configure_column(
             field="DATE",
@@ -191,18 +157,17 @@ if uploaded_journal_file_path is not None:
 
         gb.configure_grid_options(
             tooltipShowDelay=0,
-            # pivotMode=should_display_pivoted,
             pivotMode=True,
             domLayout="normal",
         )
 
-        go = gb.build()
+    go = gb.build()
 
-        # Affichage du tableau
-        AgGrid(
-            data,
-            gridOptions=go,
-            height=600,
-            fit_columns_on_grid_load=True,
-            theme="streamlit",
-        )
+    # Affichage du tableau
+    AgGrid(
+        data,
+        gridOptions=go,
+        height=600,
+        fit_columns_on_grid_load=True,
+        theme="streamlit",
+    )
