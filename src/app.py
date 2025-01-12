@@ -7,7 +7,8 @@ import paths
 import utils
 
 
-def main():
+def main() -> None:
+    """Main function to set up and run the Streamlit application."""
     setup_page()
 
     uploaded_journal_file_path = st.file_uploader("Charger un journal", type=["xlsx"])
@@ -16,8 +17,8 @@ def main():
         data = process_uploaded_file(uploaded_journal_file_path)
 
         start_date, end_date = configure_date_filter(data)
-        mode_analyse = configure_analysis_mode()
         categories, sub_categories = configure_category_filters(data)
+        mode_analyse = configure_analysis_mode()
 
         data = apply_filters(data, start_date, end_date, categories, sub_categories)
 
@@ -25,13 +26,22 @@ def main():
         display_data_table(data, mode_analyse)
 
 
-def setup_page():
+def setup_page() -> None:
+    """Set up the Streamlit page configuration and display the title and subtitle."""
     st.set_page_config(layout="wide")
     st.title(csts.TITLE)
     st.markdown(csts.SUBTITLE)
 
 
-def process_uploaded_file(uploaded_file_path):
+def process_uploaded_file(uploaded_file_path: str) -> pd.DataFrame:
+    """Process the uploaded journal file and return a processed DataFrame.
+
+    Args:
+        uploaded_file_path (str): Path to the uploaded Excel file.
+
+    Returns:
+        pd.DataFrame: Processed journal data.
+    """
     uploaded_journal = pd.read_excel(
         uploaded_file_path,
         parse_dates=["Date"],
@@ -42,7 +52,15 @@ def process_uploaded_file(uploaded_file_path):
     return utils.process_charges_cube(journal, compte)
 
 
-def configure_date_filter(data):
+def configure_date_filter(data: pd.DataFrame) -> tuple[pd.Timestamp, pd.Timestamp]:
+    """Configure and return the date filter values.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing the data to filter.
+
+    Returns:
+        tuple[pd.Timestamp, pd.Timestamp]: Start and end dates for the filter.
+    """
     start_date = st.sidebar.date_input(
         label="Sélectionnez une date de début",
         value=data["DATE"].min(),
@@ -56,7 +74,15 @@ def configure_date_filter(data):
     return start_date, end_date
 
 
-def configure_category_filters(data):
+def configure_category_filters(data: pd.DataFrame) -> tuple[list[str], list[str]]:
+    """Configure and return the category and sub-category filter values.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing the data to filter.
+
+    Returns:
+        tuple[list[str], list[str]]: Selected categories and sub-categories.
+    """
     categories = st.sidebar.multiselect(
         label="Filtrer par catégorie",
         options=data["LIBELLE_CATEGORIE"].unique(),
@@ -72,7 +98,12 @@ def configure_category_filters(data):
     return categories, sub_categories
 
 
-def configure_analysis_mode():
+def configure_analysis_mode() -> str:
+    """Configure and return the selected analysis mode.
+
+    Returns:
+        str: Selected analysis mode ("Standard" or "Groupé").
+    """
     return st.sidebar.radio(
         label="Choisir le mode d'analyse 🔐",
         key="visibility",
@@ -80,7 +111,25 @@ def configure_analysis_mode():
     )
 
 
-def apply_filters(data, start_date, end_date, categories, sub_categories):
+def apply_filters(
+    data: pd.DataFrame,
+    start_date: pd.Timestamp,
+    end_date: pd.Timestamp,
+    categories: list[str],
+    sub_categories: list[str],
+) -> pd.DataFrame:
+    """Apply filters to the data and return the filtered DataFrame.
+
+    Args:
+        data (pd.DataFrame): DataFrame to filter.
+        start_date (pd.Timestamp): Start date for filtering.
+        end_date (pd.Timestamp): End date for filtering.
+        categories (list[str]): List of selected categories.
+        sub_categories (list[str]): List of selected sub-categories.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame.
+    """
     if start_date and end_date:
         data = data[
             data["DATE"].between(pd.to_datetime(start_date), pd.to_datetime(end_date))
@@ -96,14 +145,25 @@ def apply_filters(data, start_date, end_date, categories, sub_categories):
     return data
 
 
-def display_metrics(data):
+def display_metrics(data: pd.DataFrame) -> None:
+    """Display metrics like total charges.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing the data.
+    """
     st.metric(
         label="Charges Total (€)",
         value=utils.currency_formating(data["DEBIT"].sum()),
     )
 
 
-def display_data_table(data, mode_analyse):
+def display_data_table(data: pd.DataFrame, mode_analyse: str) -> None:
+    """Display the data table using AgGrid with appropriate configurations.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing the data to display.
+        mode_analyse (str): Selected analysis mode ("Standard" or "Groupé").
+    """
     gb = GridOptionsBuilder()
     configure_grid_columns(gb, mode_analyse)
     go = gb.build()
@@ -117,7 +177,13 @@ def display_data_table(data, mode_analyse):
     )
 
 
-def configure_grid_columns(gb, mode_analyse):
+def configure_grid_columns(gb: GridOptionsBuilder, mode_analyse: str) -> None:
+    """Configure the grid columns based on the selected analysis mode.
+
+    Args:
+        gb (GridOptionsBuilder): Grid options builder instance.
+        mode_analyse (str): Selected analysis mode ("Standard" or "Groupé").
+    """
     gb.configure_default_column(
         resizable=True,
         filterable=True,
