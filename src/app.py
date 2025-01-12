@@ -10,11 +10,9 @@ def main() -> None:
     """Main function to set up and run the Streamlit application."""
     setup_page()
 
-    uploaded_journal_file_path = st.file_uploader(
-        "Charger le journal (format excel)", type=["xlsx"]
-    )
+    uploaded_journal_file_path = st.file_uploader("Charger le journal", type=["xlsx"])
     uploaded_compte_file_path = st.file_uploader(
-        "Charger le fichier de compte (fichier excel)", type=["xlsx"]
+        "Charger le fichier de compte", type=["xlsx"]
     )
 
     if uploaded_journal_file_path and uploaded_compte_file_path is not None:
