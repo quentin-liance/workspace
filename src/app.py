@@ -10,9 +10,15 @@ def main() -> None:
     """Main function to set up and run the Streamlit application."""
     setup_page()
 
-    uploaded_journal_file_path = st.file_uploader("Charger le journal", type=["xlsx"])
+    uploaded_journal_file_path = st.file_uploader(
+        label="Charger le journal",
+        type=["xlsx"],
+        accept_multiple_files=True,
+    )
     uploaded_compte_file_path = st.file_uploader(
-        "Charger le fichier de compte", type=["xlsx"]
+        label="Charger le fichier de compte",
+        type=["xlsx"],
+        accept_multiple_files=False,
     )
 
     if uploaded_journal_file_path and uploaded_compte_file_path is not None:
@@ -49,15 +55,26 @@ def process_uploaded_file(
     Returns:
         pd.DataFrame: Processed journal data.
     """
-    uploaded_journal = pd.read_excel(
-        uploaded_file_path,
-        parse_dates=["Date"],
-        date_format="%d/%m/%Y",
-    )
 
+    uploaded_journal_to_concat = []
+
+    # Pour chaque journal, on lit le fichier et on l'ajoute à la liste
+    for journal_file_path in uploaded_file_path:
+        uploaded_journal = pd.read_excel(
+            journal_file_path,
+            parse_dates=["Date"],
+            date_format="%d/%m/%Y",
+        )
+
+        uploaded_journal_to_concat.append(uploaded_journal)
+
+    # On concatène tous les journaux en un seul DataFrame
+    uploaded_journal_concat = pd.concat(
+        objs=uploaded_journal_to_concat, ignore_index=True
+    )
     uploaded_compte = pd.read_excel(uploaded_compte_file_path, dtype=str)
 
-    journal = utils.process_journal_data(uploaded_journal)
+    journal = utils.process_journal_data(uploaded_journal_concat)
     compte = utils.process_plan_comptable(uploaded_compte)
     return utils.process_charges_cube(journal, compte)
 
