@@ -44,7 +44,6 @@ def setup_page() -> None:
     st.markdown(csts.SUBTITLE)
 
 
-@st.cache_data()
 def process_uploaded_file(
     uploaded_file_path: str, uploaded_compte_file_path: str
 ) -> pd.DataFrame:
@@ -80,7 +79,6 @@ def process_uploaded_file(
     return utils.process_charges_cube(journal, compte)
 
 
-@st.cache_data()
 def configure_date_filter(data: pd.DataFrame) -> tuple[pd.Timestamp, pd.Timestamp]:
     """Configure and return the date filter values.
 
@@ -103,7 +101,6 @@ def configure_date_filter(data: pd.DataFrame) -> tuple[pd.Timestamp, pd.Timestam
     return start_date, end_date
 
 
-@st.cache_data()
 def configure_category_filters(data: pd.DataFrame) -> tuple[list[str], list[str]]:
     """Configure and return the category and sub-category filter values.
 
@@ -128,7 +125,6 @@ def configure_category_filters(data: pd.DataFrame) -> tuple[list[str], list[str]
     return categories, sub_categories
 
 
-@st.cache_data()
 def configure_analysis_mode() -> str:
     """Configure and return the selected analysis mode.
 
@@ -142,7 +138,6 @@ def configure_analysis_mode() -> str:
     )
 
 
-@st.cache_data()
 def apply_filters(
     data: pd.DataFrame,
     start_date: pd.Timestamp,
@@ -177,7 +172,6 @@ def apply_filters(
     return data
 
 
-@st.cache_data()
 def display_metrics(data: pd.DataFrame) -> None:
     """Display metrics like total charges.
 
@@ -190,7 +184,6 @@ def display_metrics(data: pd.DataFrame) -> None:
     )
 
 
-@st.cache_data()
 def display_data_table(data: pd.DataFrame, mode_analyse: str) -> None:
     """Display the data table using AgGrid with appropriate configurations.
 
@@ -211,7 +204,6 @@ def display_data_table(data: pd.DataFrame, mode_analyse: str) -> None:
     )
 
 
-@st.cache_data()
 def configure_grid_columns(gb: GridOptionsBuilder, mode_analyse: str) -> None:
     """Configure the grid columns based on the selected analysis mode.
 
