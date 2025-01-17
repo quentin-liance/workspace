@@ -38,7 +38,6 @@ def main() -> None:
         display_data_table(data, mode_analyse)
 
 
-@st.cache_data()
 def setup_page() -> None:
     """Set up the Streamlit page configuration and display the title and subtitle."""
     st.set_page_config(layout="wide")
