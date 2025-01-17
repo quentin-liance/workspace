@@ -130,27 +130,32 @@ def process_charges_cube(
     )
 
     # Drop unnecessary columns and filter for relevant ones
-    charges_plan_de_compte = charges_plan_de_compte.drop(
-        columns=[
-            "CLE",
-            "CODE_SOUS_CATEGORIE",
-            "JOURNAL",
-            "CREDIT",
-            "ECHEANCE",
-            "PIECE",
-            "REF_PIECE",
-            "COMPTE",
-        ],
-        axis=1,
-    ).filter(
-        [
-            "DATE",
-            "LIBELLE_CATEGORIE",
-            "LIBELLE_SOUS_CATEGORIE",
-            "LIBELLE",
-            "DEBIT",
-            "DATE_STR",
-        ]
+    charges_plan_de_compte = (
+        charges_plan_de_compte.drop(
+            columns=[
+                "CLE",
+                "CODE_SOUS_CATEGORIE",
+                "JOURNAL",
+                "CREDIT",
+                "ECHEANCE",
+                "PIECE",
+                "REF_PIECE",
+                "COMPTE",
+            ],
+            axis=1,
+        )
+        .filter(
+            [
+                "DATE",
+                "LIBELLE_CATEGORIE",
+                "LIBELLE_SOUS_CATEGORIE",
+                "LIBELLE",
+                "DEBIT",
+                "DATE_STR",
+            ]
+        )
+        .query("DEBIT > 0")
+        .reset_index(drop=True)
     )
 
     # Save the processed cube to a Parquet file
