@@ -6,7 +6,6 @@ import constants as csts
 import utils
 
 
-@st.cache_data()
 def main() -> None:
     """Main function to set up and run the Streamlit application."""
     setup_page()
